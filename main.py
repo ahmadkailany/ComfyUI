@@ -109,10 +109,9 @@ if os.name == "nt":
     logging.getLogger("xformers").addFilter(lambda record: 'A matching Triton is not available' not in record.getMessage())
 
 if __name__ == "__main__":
-    if args.cuda_device is not None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = str(args.cuda_device)
-        os.environ['HIP_VISIBLE_DEVICES'] = str(args.cuda_device)
-        logging.info("Set cuda device to: {}".format(args.cuda_device))
+    # Force use of CPU, no CUDA device
+    os.environ['CUDA_VISIBLE_DEVICES'] = ""  # No GPU devices available
+    logging.info("Running in CPU mode (no GPU available).")
 
     if args.oneapi_device_selector is not None:
         os.environ['ONEAPI_DEVICE_SELECTOR'] = args.oneapi_device_selector
@@ -143,6 +142,7 @@ import app.logger
 
 
 def cuda_malloc_warning():
+    # This function can be skipped or modified to be CPU-only since we are not using CUDA.
     device = comfy.model_management.get_torch_device()
     device_name = comfy.model_management.get_torch_device_name(device)
     cuda_malloc_warning = False
@@ -290,7 +290,7 @@ def start_comfyui(asyncio_loop=None):
         await run(prompt_server, address=args.listen, port=args.port, verbose=not args.dont_print_server, call_on_start=call_on_start)
 
     # Returning these so that other code can integrate with the ComfyUI loop and server
-    return asyncio_loop, prompt_server, start_all
+    return asyncio_loop, prompt_server, start_all_func
 
 
 if __name__ == "__main__":
